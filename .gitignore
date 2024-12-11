@@ -1,0 +1,4 @@
+*.tfstate
+*.tvstate.backup
+*.tfvars
+.terragrunt-cache
