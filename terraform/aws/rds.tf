@@ -27,13 +27,6 @@ module "penpot_db" {
   billing_tag_value = var.billing_code
 }
 
-resource "aws_ssm_parameter" "penpot_database_host" {
-  name  = "penpot_database_host"
-  type  = "SecureString"
-  value = module.penpot_db.proxy_endpoint
-  tags  = local.common_tags
-}
-
 resource "aws_ssm_parameter" "penpot_database_username" {
   name  = "penpot_database_username"
   type  = "SecureString"

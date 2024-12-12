@@ -29,3 +29,21 @@ variable "penpot_database_password" {
   type        = string
   sensitive   = true
 }
+
+variable "penpot_google_oauth_client_id" {
+  description = "The Google OAuth client ID to use for the database."
+  type        = string
+  sensitive   = true
+}
+
+variable "penpot_google_oauth_client_secret" {
+  description = "The Google OAuth client secret to use for the database."
+  type        = string
+  sensitive   = true
+}
+
+variable "penpot_secret_key" {
+  description = "The secret key to use for creating persistent user sessions."
+  type        = string
+  sensitive   = true
+}

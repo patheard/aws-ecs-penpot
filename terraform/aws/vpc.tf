@@ -1,10 +1,3 @@
-locals {
-  common_tags = {
-    Terraform  = "true"
-    CostCentre = var.billing_code
-  }
-}
-
 module "penpot_vpc" {
   source = "github.com/cds-snc/terraform-modules//vpc?ref=v10.2.0"
   name   = "penpot-${var.env}"
@@ -57,6 +50,26 @@ resource "aws_security_group_rule" "penpot_ecs_ingress_lb" {
   protocol                 = "tcp"
   security_group_id        = aws_security_group.penpot_ecs.id
   source_security_group_id = aws_security_group.penpot_lb.id
+}
+
+resource "aws_security_group_rule" "penpot_ecs_ingress_backend" {
+  description       = "Ingress between Penpot frontend and backend"
+  type              = "ingress"
+  from_port         = 6060
+  to_port           = 6060
+  protocol          = "tcp"
+  security_group_id = aws_security_group.penpot_ecs.id
+  self              = true
+}
+
+resource "aws_security_group_rule" "penpot_ecs_ingress_exporter" {
+  description       = "Ingress between Penpot frontend and exporter"
+  type              = "ingress"
+  from_port         = 6061
+  to_port           = 6061
+  protocol          = "tcp"
+  security_group_id = aws_security_group.penpot_ecs.id
+  self              = true
 }
 
 # Load balancer

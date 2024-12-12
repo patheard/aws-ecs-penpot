@@ -1,5 +1,7 @@
 resource "aws_ecr_repository" "penpot" {
-  name                 = "penpot"
+  for_each = { for service in local.ecs_services : service.name => service }
+
+  name                 = "penpot-${each.value.name}"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -10,7 +12,9 @@ resource "aws_ecr_repository" "penpot" {
 }
 
 resource "aws_ecr_lifecycle_policy" "penpot" {
-  repository = aws_ecr_repository.penpot.name
+  for_each = { for service in local.ecs_services : service.name => service }
+
+  repository = aws_ecr_repository.penpot[each.value.name].name
   policy     = <<-EOT
   {
     "rules": [
