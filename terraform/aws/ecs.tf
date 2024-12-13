@@ -18,7 +18,7 @@ locals {
     },
     {
       "name"  = "PENPOT_FLAGS"
-      "value" = "enable-login-with-google enable-demo-warning disable-onboarding disable-onboarding-questions disable-onboarding-newsletter disable-smpt disable-registration disable-email-verification"
+      "value" = "enable-login-with-google enable-demo-warning enable-registration disable-login-with-password disable-onboarding disable-onboarding-questions disable-onboarding-newsletter disable-smpt disable-email-verification"
     },
     {
       "name"  = "PENPOT_PUBLIC_URI"
@@ -36,7 +36,6 @@ locals {
       "name"  = "PENPOT_STORAGE_ASSETS_S3_REGION"
       "value" = var.region
     },
-
   ]
   container_secrets = [
     {
@@ -104,7 +103,7 @@ module "penpot_ecs" {
   autoscaling_max_capacity = 2
 
   # Task definition
-  container_image                     = "${aws_ecr_repository.penpot[each.value.name].repository_url}:v1"
+  container_image                     = "${aws_ecr_repository.penpot[each.value.name].repository_url}:latest"
   container_host_port                 = each.value.port
   container_port                      = each.value.port
   container_environment               = local.container_env

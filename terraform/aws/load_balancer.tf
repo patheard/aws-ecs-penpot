@@ -18,11 +18,16 @@ resource "random_string" "alb_tg_suffix" {
   length  = 3
   special = false
   upper   = false
+
+  keepers = {
+    port     = 80
+    protocol = "HTTP"
+  }
 }
 
 resource "aws_lb_target_group" "penpot" {
   name                 = "penpot-tg-${random_string.alb_tg_suffix.result}"
-  port                 = 8080
+  port                 = 80
   protocol             = "HTTP"
   target_type          = "ip"
   deregistration_delay = 30
