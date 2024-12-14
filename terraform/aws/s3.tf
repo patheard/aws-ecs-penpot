@@ -22,7 +22,7 @@ resource "aws_s3_bucket_cors_configuration" "penpot_assets" {
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["GET", "HEAD"]
-    allowed_origins = [var.domain]
+    allowed_origins = ["https://${var.domain}"]
     max_age_seconds = 3000
   }
 }
