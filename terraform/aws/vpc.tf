@@ -3,7 +3,7 @@ module "penpot_vpc" {
   name   = "penpot-${var.env}"
 
   enable_flow_log                  = true
-  availability_zones               = 2
+  availability_zones               = local.availability_zones
   cidrsubnet_newbits               = 8
   single_nat_gateway               = true
   allow_https_request_out          = true
@@ -72,6 +72,15 @@ resource "aws_security_group_rule" "penpot_frontend_ecs_ingress_lb" {
   source_security_group_id = aws_security_group.penpot_lb.id
 }
 
+resource "aws_security_group_rule" "penpot_ecs_egress_efs" {
+  description              = "Egress from Penpot ECS task to EFS"
+  type                     = "egress"
+  from_port                = 2049
+  to_port                  = 2049
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.penpot_ecs.id
+  source_security_group_id = aws_security_group.penpot_efs.id
+}
 
 # Load balancer
 resource "aws_security_group" "penpot_lb" {
@@ -164,5 +173,23 @@ resource "aws_security_group_rule" "penpot_redis_ingress_ecs" {
   to_port                  = 6379
   protocol                 = "tcp"
   security_group_id        = aws_security_group.penpot_redis.id
+  source_security_group_id = aws_security_group.penpot_ecs.id
+}
+
+# EFS
+resource "aws_security_group" "penpot_efs" {
+  name        = "penpot_efs"
+  description = "Penpot EFS access"
+  vpc_id      = module.penpot_vpc.vpc_id
+  tags        = local.common_tags
+}
+
+resource "aws_security_group_rule" "efs_ingress_wordpress_ecs" {
+  description              = "Ingress from the Penpot ECS tasks"
+  type                     = "ingress"
+  from_port                = 2049
+  to_port                  = 2049
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.penpot_efs.id
   source_security_group_id = aws_security_group.penpot_ecs.id
 }

@@ -2,7 +2,7 @@ locals {
   container_env = [
     {
       "name"  = "PENPOT_ASSETS_STORAGE_BACKEND"
-      "value" = "assets-s3"
+      "value" = "assets-fs"
     },
     {
       "name"  = "PENPOT_BACKEND_URI"
@@ -33,13 +33,9 @@ locals {
       "value" = "redis://${aws_elasticache_cluster.penpot.cache_nodes[0]["address"]}/0"
     },
     {
-      "name"  = "PENPOT_STORAGE_ASSETS_S3_BUCKET"
-      "value" = module.penpot_asset_bucket.s3_bucket_id
-    },
-    {
-      "name"  = "PENPOT_STORAGE_ASSETS_S3_REGION"
-      "value" = var.region
-    },
+      "name"  = "PENPOT_STORAGE_ASSETS_FS_DIRECTORY"
+      "value" = "/opt/data/assets"
+    }
   ]
   container_secrets = [
     {
@@ -115,18 +111,38 @@ module "penpot_ecs" {
   container_read_only_root_filesystem = false
 
   task_exec_role_policy_documents = [
-    data.aws_iam_policy_document.ecs_task_ssm_parameters.json
+    data.aws_iam_policy_document.ecs_task_ssm_parameters.json,
+    data.aws_iam_policy_document.ecs_task_efs.json
   ]
   task_role_policy_documents = [
     data.aws_iam_policy_document.ecs_task_create_tunnel.json,
-    data.aws_iam_policy_document.s3_assets_manage.json
   ]
 
+  # Shared assets volume
+  task_volume = [{
+    name = "assets"
+    efs_volume_configuration = {
+      file_system_id     = aws_efs_file_system.penpot.id
+      transit_encryption = "ENABLED"
+
+      authorization_config = {
+        access_point_id = aws_efs_access_point.penpot.id
+        iam             = "DISABLED"
+      }
+    }
+  }]
+
+  container_mount_points = [{
+    sourceVolume  = "assets"
+    containerPath = "/opt/data/assets"
+    readOnly      = false
+  }]
+
   # Networking
-  lb_target_group_arn            = each.value.lb_tg_arn
-  subnet_ids                     = module.penpot_vpc.private_subnet_ids
-  security_group_ids             = [aws_security_group.penpot_ecs.id]
-  enable_execute_command         = true
+  lb_target_group_arn    = each.value.lb_tg_arn
+  subnet_ids             = module.penpot_vpc.private_subnet_ids
+  security_group_ids     = [aws_security_group.penpot_ecs.id]
+  enable_execute_command = true
 
   billing_tag_value = var.billing_code
 }
@@ -152,23 +168,6 @@ data "aws_iam_policy_document" "ecs_task_ssm_parameters" {
   }
 }
 
-data "aws_iam_policy_document" "s3_assets_manage" {
-  statement {
-    sid    = "S3AssetsManage"
-    effect = "Allow"
-    actions = [
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:ListBucket",
-      "s3:DeleteObject"
-    ]
-    resources = [
-      module.penpot_asset_bucket.s3_bucket_arn,
-      "${module.penpot_asset_bucket.s3_bucket_arn}/*"
-    ]
-  }
-}
-
 data "aws_iam_policy_document" "ecs_task_create_tunnel" {
   statement {
     sid    = "CreateSSMTunnel"
@@ -180,6 +179,21 @@ data "aws_iam_policy_document" "ecs_task_create_tunnel" {
       "ssmmessages:OpenDataChannel"
     ]
     resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "ecs_task_efs" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "elasticfilesystem:ClientWrite",
+      "elasticfilesystem:ClientMount",
+      "elasticfilesystem:DescribeMountTargets",
+      "elasticfilesystem:DescribeFileSystems"
+    ]
+    resources = [
+      aws_efs_file_system.penpot.arn
+    ]
   }
 }
 
