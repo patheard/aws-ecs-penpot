@@ -20,14 +20,14 @@ resource "random_string" "alb_tg_suffix" {
   upper   = false
 
   keepers = {
-    port     = 80
+    port     = 8080
     protocol = "HTTP"
   }
 }
 
 resource "aws_lb_target_group" "penpot" {
   name                 = "penpot-tg-${random_string.alb_tg_suffix.result}"
-  port                 = 80
+  port                 = 8080
   protocol             = "HTTP"
   target_type          = "ip"
   deregistration_delay = 30
@@ -37,6 +37,88 @@ resource "aws_lb_target_group" "penpot" {
     enabled  = true
     protocol = "HTTP"
     path     = "/"
+    matcher  = "200-399"
+  }
+
+  stickiness {
+    type = "lb_cookie"
+  }
+
+  tags = local.common_tags
+
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes = [
+      stickiness[0].cookie_name
+    ]
+  }
+}
+
+resource "random_string" "alb_tg_backend_suffix" {
+  length  = 3
+  special = false
+  upper   = false
+
+  keepers = {
+    port     = 6060
+    protocol = "HTTP"
+    path     = "/readyz"
+  }
+}
+
+resource "aws_lb_target_group" "penpot_backend" {
+  name                 = "penpot-backend-tg-${random_string.alb_tg_backend_suffix.result}"
+  port                 = 6060
+  protocol             = "HTTP"
+  target_type          = "ip"
+  deregistration_delay = 30
+  vpc_id               = module.penpot_vpc.vpc_id
+
+  health_check {
+    enabled  = true
+    protocol = "HTTP"
+    path     = "/readyz"
+    matcher  = "200-399"
+  }
+
+  stickiness {
+    type = "lb_cookie"
+  }
+
+  tags = local.common_tags
+
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes = [
+      stickiness[0].cookie_name
+    ]
+  }
+}
+
+resource "random_string" "alb_tg_exporter_suffix" {
+  length  = 3
+  special = false
+  upper   = false
+
+  keepers = {
+    port     = 6061
+    protocol = "HTTP"
+    path     = "/readyz"
+  }
+}
+
+resource "aws_lb_target_group" "penpot_exporter" {
+  name                 = "penpot-exporter-tg-${random_string.alb_tg_exporter_suffix.result}"
+  port                 = 6061
+  protocol             = "HTTP"
+  target_type          = "ip"
+  deregistration_delay = 30
+  vpc_id               = module.penpot_vpc.vpc_id
+
+  health_check {
+    enabled  = true
+    protocol = "HTTP"
+    path     = "/readyz"
     matcher  = "200-399"
   }
 
@@ -90,4 +172,40 @@ resource "aws_lb_listener" "penpot_http_redirect" {
   }
 
   tags = local.common_tags
+}
+
+resource "aws_alb_listener_rule" "penpot_exporter" {
+  listener_arn = aws_lb_listener.penpot.arn
+  priority     = 10
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.penpot_exporter.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/export"]
+    }
+  }
+}
+
+resource "aws_alb_listener_rule" "penpot_backend" {
+  listener_arn = aws_lb_listener.penpot.arn
+  priority     = 20
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.penpot_backend.arn
+  }
+
+  condition {
+    path_pattern {
+      values = [
+        "/api/*",
+        "/ws/notifications",
+        "/assets/*"
+      ]
+    }
+  }
 }

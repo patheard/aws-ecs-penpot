@@ -5,16 +5,19 @@ locals {
   }
   ecs_services = [
     {
-      name = "frontend"
-      port = 8080
+      name      = "frontend"
+      port      = 8080
+      lb_tg_arn = aws_lb_target_group.penpot.arn
     },
     {
-      name = "backend"
-      port = 6060
+      name      = "backend"
+      port      = 6060
+      lb_tg_arn = aws_lb_target_group.penpot_backend.arn
     },
     {
-      name = "exporter"
-      port = 6061
+      name      = "exporter"
+      port      = 6061
+      lb_tg_arn = aws_lb_target_group.penpot_exporter.arn
     }
   ]
 }

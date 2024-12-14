@@ -7,3 +7,22 @@ module "penpot_asset_bucket" {
     enabled = true
   }
 }
+
+resource "aws_s3_bucket_website_configuration" "penpot_assets" {
+  bucket = module.penpot_asset_bucket.s3_bucket_id
+
+  index_document {
+    suffix = "index.html"
+  }
+}
+
+resource "aws_s3_bucket_cors_configuration" "penpot_assets" {
+  bucket = module.penpot_asset_bucket.s3_bucket_id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "HEAD"]
+    allowed_origins = [var.domain]
+    max_age_seconds = 3000
+  }
+}

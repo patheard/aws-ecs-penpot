@@ -42,8 +42,28 @@ resource "aws_security_group_rule" "penpot_ecs_egress_all" {
   security_group_id = aws_security_group.penpot_ecs.id
 }
 
-resource "aws_security_group_rule" "penpot_ecs_ingress_lb" {
-  description              = "Ingress from load balancer to Penpot ECS task"
+resource "aws_security_group_rule" "penpot_backend_ecs_ingress_lb" {
+  description              = "Ingress from load balancer to Penpot backend ECS task"
+  type                     = "ingress"
+  from_port                = 6060
+  to_port                  = 6060
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.penpot_ecs.id
+  source_security_group_id = aws_security_group.penpot_lb.id
+}
+
+resource "aws_security_group_rule" "penpot_exporter_ecs_ingress_lb" {
+  description              = "Ingress from load balancer to Penpot exporter ECS task"
+  type                     = "ingress"
+  from_port                = 6061
+  to_port                  = 6061
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.penpot_ecs.id
+  source_security_group_id = aws_security_group.penpot_lb.id
+}
+
+resource "aws_security_group_rule" "penpot_frontend_ecs_ingress_lb" {
+  description              = "Ingress from load balancer to Penpot frontend ECS task"
   type                     = "ingress"
   from_port                = 8080
   to_port                  = 8080
@@ -52,25 +72,6 @@ resource "aws_security_group_rule" "penpot_ecs_ingress_lb" {
   source_security_group_id = aws_security_group.penpot_lb.id
 }
 
-resource "aws_security_group_rule" "penpot_ecs_ingress_backend" {
-  description       = "Ingress between Penpot frontend and backend"
-  type              = "ingress"
-  from_port         = 6060
-  to_port           = 6060
-  protocol          = "tcp"
-  security_group_id = aws_security_group.penpot_ecs.id
-  self              = true
-}
-
-resource "aws_security_group_rule" "penpot_ecs_ingress_exporter" {
-  description       = "Ingress between Penpot frontend and exporter"
-  type              = "ingress"
-  from_port         = 6061
-  to_port           = 6061
-  protocol          = "tcp"
-  security_group_id = aws_security_group.penpot_ecs.id
-  self              = true
-}
 
 # Load balancer
 resource "aws_security_group" "penpot_lb" {
@@ -100,8 +101,28 @@ resource "aws_security_group_rule" "penpot_lb_ingress_internet_https" {
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
-resource "aws_security_group_rule" "penpot_lb_egress_ecs" {
-  description              = "Egress from load balancer to Penpot ECS task"
+resource "aws_security_group_rule" "penpot_lb_egress_ecs_backend" {
+  description              = "Egress from load balancer to Penpot ECS backend task"
+  type                     = "egress"
+  from_port                = 6060
+  to_port                  = 6060
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.penpot_lb.id
+  source_security_group_id = aws_security_group.penpot_ecs.id
+}
+
+resource "aws_security_group_rule" "penpot_lb_egress_ecs_exporter" {
+  description              = "Egress from load balancer to Penpot ECS exporter task"
+  type                     = "egress"
+  from_port                = 6061
+  to_port                  = 6061
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.penpot_lb.id
+  source_security_group_id = aws_security_group.penpot_ecs.id
+}
+
+resource "aws_security_group_rule" "penpot_lb_egress_ecs_frontend" {
+  description              = "Egress from load balancer to Penpot ECS frontend task"
   type                     = "egress"
   from_port                = 8080
   to_port                  = 8080

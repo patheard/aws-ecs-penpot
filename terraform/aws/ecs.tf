@@ -6,7 +6,7 @@ locals {
     },
     {
       "name"  = "PENPOT_BACKEND_URI"
-      "value" = "http://backend.penpot.ecs.local:6060"
+      "value" = "https://${var.domain}"
     },
     {
       "name"  = "PENPOT_DATABASE_URI"
@@ -14,11 +14,15 @@ locals {
     },
     {
       "name"  = "PENPOT_EXPORTER_URI"
-      "value" = "http://exporter.penpot.ecs.local:6061"
+      "value" = "https://${var.domain}"
     },
     {
       "name"  = "PENPOT_FLAGS"
       "value" = "enable-login-with-google enable-demo-warning enable-registration disable-login-with-password disable-onboarding disable-onboarding-questions disable-onboarding-newsletter disable-smpt disable-email-verification"
+    },
+    {
+      "name"  = "PENPOT_INTERNAL_RESOLVER"
+      "value" = "169.254.169.253"
     },
     {
       "name"  = "PENPOT_PUBLIC_URI"
@@ -119,11 +123,9 @@ module "penpot_ecs" {
   ]
 
   # Networking
-  lb_target_group_arn            = each.value.name == "frontend" ? aws_lb_target_group.penpot.arn : null
+  lb_target_group_arn            = each.value.lb_tg_arn
   subnet_ids                     = module.penpot_vpc.private_subnet_ids
   security_group_ids             = [aws_security_group.penpot_ecs.id]
-  service_discovery_enabled      = true
-  service_discovery_namespace_id = aws_service_discovery_private_dns_namespace.penpot.id
   enable_execute_command         = true
 
   billing_tag_value = var.billing_code
