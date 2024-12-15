@@ -11,22 +11,24 @@ terragrunt apply
 Once the Terraform is finished, you'll need to push up the following images to the ECRs:
 
 ```sh
-penpotapp/frontend:latest # this is on port 80, you'll need to switch to 8080 in the nginx config
-penpotapp/backend:latest
-penpotapp/exporter:latest
+docker tag penpotapp/backend:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpotapp/backend:latest
+docker tag penpotapp/exporter:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpotapp/exporter:latest
+
+docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpotapp/backend:latest
+docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpotapp/exporter:latest
 ```
 
-Note that the default `penpotapp/frontend` image runs on port 80 and won't work with this infrastructure.  You can rebuild the Docker image to use port 8080 with the [nginx.conf from the official Penpot repo](https://github.com/penpot/penpot/blob/develop/docker/images/files/nginx.conf):
+You will also need to build your own version of the `penpotapp/frontend` image as the official image listes on port `80`.
 
-```dockerfile
-FROM penpotapp/frontend:latest
-
-USER root
-
-ADD ./files/nginx.conf /etc/nginx/nginx.conf.template
-RUN chown -R 1001:0 /etc/nginx;
-
-USER penpot:penpot
+```sh
+git clone https://github.com/penpot/penpot.git
+cd penpot
+./manage.sh build-frontend-bundle
+docker build \
+    -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpot-frontend:latest \
+    -f ./docker/images/Dockerfile.frontend \
+    ./docker/images 
+docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpotapp/frontend:latest
 ```
 
 :warning: Still very much a work in progress and chalk full of bugs.
