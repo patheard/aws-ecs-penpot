@@ -123,10 +123,10 @@ module "penpot_ecs" {
   ]
 
   # Networking
-  lb_target_group_arn            = each.value.lb_tg_arn
-  subnet_ids                     = module.penpot_vpc.private_subnet_ids
-  security_group_ids             = [aws_security_group.penpot_ecs.id]
-  enable_execute_command         = true
+  lb_target_group_arn    = aws_lb_target_group.penpot_tg[each.value.name].arn
+  subnet_ids             = module.penpot_vpc.private_subnet_ids
+  security_group_ids     = [aws_security_group.penpot_ecs.id]
+  enable_execute_command = true
 
   billing_tag_value = var.billing_code
 }
