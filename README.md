@@ -18,16 +18,18 @@ docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpotapp/backend:
 docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpotapp/exporter:latest
 ```
 
-You will also need to build your own version of the `penpotapp/frontend` image as the official image listes on port `80`.
+You will also need to build your own version of the `penpotapp/frontend` image as the official image listens on port `80`.
 
 ```sh
+# Clone the official repo
 git clone https://github.com/penpot/penpot.git
 cd penpot
+
+# Build the frontend bundle
 ./manage.sh build-frontend-bundle
-docker build \
-    -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpot-frontend:latest \
-    -f ./docker/images/Dockerfile.frontend \
-    ./docker/images 
+
+# Build and push the image
+docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpot-frontend:latest -f ./docker/images/Dockerfile.frontend ./docker/images 
 docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpotapp/frontend:latest
 ```
 
