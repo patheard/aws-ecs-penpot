@@ -27,10 +27,13 @@ cd penpot
 
 # Build the frontend bundle
 ./manage.sh build-frontend-bundle
+./manage.sh build-frontend-docker-images
 
 # Build and push the image
-docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpot-frontend:latest -f ./docker/images/Dockerfile.frontend ./docker/images 
+docker tag penpotapp/frontend:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpot-frontend:latest
 docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/penpotapp/frontend:latest
 ```
 
-:warning: Still very much a work in progress and chalk full of bugs.
+## Issues
+1. There is currently a bug in Penpot that prevents the [deletion of files and pages](https://github.com/penpot/penpot/issues/5483).
+2. The S3 signed object URLs expire before the browser cache of the 307 redirects.  A cache clean fixes the issue.

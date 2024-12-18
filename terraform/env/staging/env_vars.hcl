@@ -1,5 +1,5 @@
 inputs = {
-  account_id   = "571510889204"
+  account_id   = "182399692729"
   domain       = "penpot.cdssandbox.xyz"
   env          = "staging"
   region       = "ca-central-1"

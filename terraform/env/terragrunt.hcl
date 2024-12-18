@@ -20,7 +20,7 @@ remote_state {
   }
   config = {
     encrypt             = true
-    bucket              = "${local.billing_code}-tf"
+    bucket              = "${local.billing_code}-state-tf"
     dynamodb_table      = "terraform-state-lock-dynamo"
     region              = "ca-central-1"
     key                 = "terraform.tfstate"

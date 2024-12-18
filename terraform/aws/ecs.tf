@@ -18,7 +18,7 @@ locals {
     },
     {
       "name"  = "PENPOT_FLAGS"
-      "value" = "enable-login-with-google enable-demo-warning enable-registration disable-login-with-password disable-onboarding disable-onboarding-questions disable-onboarding-newsletter disable-smpt disable-email-verification"
+      "value" = "enable-login-with-google enable-demo-warning enable-registration enable-cors disable-login-with-password disable-smpt disable-email-verification"
     },
     {
       "name"  = "PENPOT_INTERNAL_RESOLVER"
